@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: fitness-backend
+
+  mongodb:
+    uri: ${MONGODB_URI}
+    database: fitness
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
