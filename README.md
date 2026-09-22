@@ -1,1524 +1,340 @@
-# 🏋️ Fitness Backend
+# Fitness Backend
 
-> Backend da plataforma de treino e nutrição personalizada, construída com **Java + Spring Boot + MongoDB**, preparada para integração com aplicativos **Android e iOS** e futura utilização de **Inteligência Artificial**.
+Backend da plataforma de fitness personalizada, desenvolvido com Java,
+Spring Boot, MongoDB e Google Gemini.
 
----
+## Status do projeto
 
-## 📌 Sobre o projeto
+  Parte   Módulo                    Status
+  ------- ------------------------- ---------------------------
+  1       Backend + autenticação    Implementado
+  2       Usuário + perfil          Implementado
+  3       Exercícios                Implementado
+  4       Workout                   Implementado
+  5       WorkoutSession + SetLog   Implementado
+  6       Performance / histórico   Implementado
+  7       Inteligência Artificial   Parcialmente implementado
+  8       Nutrição                  Em desenvolvimento
+  9       IA nutricional            Futuro
 
-O **Fitness Backend** é a API responsável por centralizar usuários, autenticação, perfis, exercícios, treinos, histórico de desempenho e, futuramente, nutrição e inteligência artificial.
+## Stack
 
-A proposta não é ser apenas mais um aplicativo de academia. O sistema está sendo construído para **conhecer o usuário e adaptar sua experiência** com base em objetivos, experiência, disponibilidade, equipamentos, preferências e evolução.
+-   Java 26
+-   Spring Boot 4.1.1
+-   Maven
+-   Spring Web
+-   Spring Data MongoDB
+-   Spring Security
+-   Bean Validation
+-   Lombok
+-   Actuator
+-   JJWT 0.13.0
+-   Springdoc OpenAPI
+-   Google GenAI SDK
+-   MongoDB Atlas
 
-### 🎯 Objetivo
+## Estrutura
 
-Criar uma plataforma capaz de conectar:
-
-- 👤 Perfil e objetivos do usuário
-- 🏋️ Treinos personalizados
-- 📈 Histórico e evolução
-- 🍎 Nutrição
-- 🤖 Inteligência Artificial
-- 📱 Aplicativo Android e iOS
-
-O backend será independente do aplicativo, permitindo que diferentes clientes consumam a mesma API.
-
----
-
-# 🏗️ Stack tecnológica
-
-| Tecnologia | Utilização |
-|---|---|
-| ☕ Java | Linguagem principal |
-| 🌱 Spring Boot | Framework do backend |
-| 🔐 Spring Security | Segurança e autenticação |
-| 🔑 JWT | Autenticação baseada em tokens |
-| 🔒 BCrypt | Hash seguro de senhas |
-| 🍃 MongoDB Atlas | Banco de dados |
-| 📦 Spring Data MongoDB | Persistência |
-| ✅ Jakarta Validation | Validação das requisições |
-| 🛠️ Maven | Gerenciamento e build |
-| 🧩 Lombok | Redução de código repetitivo |
-| 📊 Spring Boot Actuator | Monitoramento |
-| 📱 React Native + Expo | Cliente mobile planejado |
-| 🤖 Gemini | IA planejada |
-
----
-
-# 🧱 Arquitetura atual
-
-A aplicação está sendo organizada por responsabilidades:
-
-```text
-src/main/java/br/com/fitness
-│
+``` text
+br.com.fitness
+├── ai
 ├── auth
-│   ├── controller
-│   │   └── AuthController.java
-│   ├── dto
-│   │   ├── LoginRequest.java
-│   │   ├── LoginResponse.java
-│   │   ├── RegisterRequest.java
-│   │   └── UserResponse.java
-│   ├── security
-│   │   ├── JwtAuthenticationFilter.java
-│   │   └── JwtService.java
-│   └── service
-│       └── AuthService.java
-│
 ├── common
-│   ├── controller
-│   │   └── HealthController.java
-│   ├── dto
-│   │   └── ApiErrorResponse.java
-│   └── exception
-│       └── GlobalExceptionHandler.java
-│
 ├── config
-│   ├── PasswordConfig.java
-│   └── SecurityConfig.java
-│
 ├── exercise
-│   ├── controller
-│   │   └── ExerciseController.java
-│   ├── dto
-│   │   ├── CreateExerciseRequest.java
-│   │   ├── ExerciseResponse.java
-│   │   └── UpdateExerciseRequest.java
-│   ├── model
-│   │   └── Exercise.java
-│   ├── repository
-│   │   └── ExerciseRepository.java
-│   └── service
-│       └── ExerciseService.java
-│
+├── performance
 ├── profile
-│   ├── controller
-│   │   └── UserProfileController.java
-│   ├── dto
-│   │   ├── CreateUserProfileRequest.java
-│   │   ├── UpdateUserProfileRequest.java
-│   │   └── UserProfileResponse.java
-│   ├── model
-│   │   └── UserProfile.java
-│   ├── repository
-│   │   └── UserProfileRepository.java
-│   └── service
-│       └── UserProfileService.java
-│
-├── workout
-│   ├── controller
-│   │   ├── WorkoutController.java
-│   │   └── WorkoutExerciseController.java
-│   ├── dto
-│   │   ├── AddWorkoutExerciseRequest.java
-│   │   ├── CreateWorkoutRequest.java
-│   │   ├── UpdateWorkoutRequest.java
-│   │   ├── UpdateWorkoutExerciseRequest.java
-│   │   ├── WorkoutExerciseResponse.java
-│   │   └── WorkoutResponse.java
-│   ├── model
-│   │   ├── Workout.java
-│   │   └── WorkoutExercise.java
-│   ├── repository
-│   │   ├── WorkoutExerciseRepository.java
-│   │   └── WorkoutRepository.java
-│   └── service
-│       ├── WorkoutExerciseService.java
-│       └── WorkoutService.java
-│
-└── user
-    ├── controller
-    │   └── UserController.java
-    ├── model
-    │   └── User.java
-    └── repository
-        └── UserRepository.java
+├── user
+└── workout
 ```
 
-A arquitetura será expandida conforme novas funcionalidades forem implementadas.
+## Variáveis de ambiente
 
----
+``` text
+MONGODB_URI
+JWT_SECRET
+GEMINI_API_KEY
+```
 
-# 🔐 Autenticação
+Nunca versionar chaves ou credenciais.
 
-A autenticação já está implementada.
+## Endpoints
 
-## Cadastro
+### Health
 
-```http
+``` http
+GET /api/health
+```
+
+### Autenticação
+
+``` http
 POST /api/auth/register
-```
-
-Exemplo:
-
-```json
-{
-  "name": "João",
-  "email": "joao@fitness.com",
-  "password": "123456"
-}
-```
-
-O backend:
-
-1. Valida os dados.
-2. Verifica se o e-mail já existe.
-3. Gera um hash BCrypt da senha.
-4. Cria o usuário.
-5. Salva no MongoDB Atlas.
-6. Retorna os dados públicos do usuário.
-
-### Exemplo de resposta
-
-```json
-{
-  "id": "xxxxxxxx",
-  "name": "João",
-  "email": "joao@fitness.com",
-  "role": "USER"
-}
-```
-
-> 🔒 O `passwordHash` não é retornado pela API.
-
----
-
-## Login
-
-```http
 POST /api/auth/login
 ```
 
-Exemplo:
-
-```json
-{
-  "email": "joao@fitness.com",
-  "password": "123456"
-}
-```
-
-Resposta:
-
-```json
-{
-  "token": "eyJ...",
-  "type": "Bearer"
-}
-```
-
-O token deve ser enviado nas rotas protegidas através do header:
-
-```http
-Authorization: Bearer SEU_TOKEN
-```
-
----
-
-# 🔑 JWT
-
-A autenticação utiliza JWT com sessão **STATELESS**.
-
-Fluxo:
-
-```text
-┌──────────────┐
-│    Cliente   │
-└──────┬───────┘
-       │ login
-       ▼
-┌──────────────┐
-│ AuthService  │
-└──────┬───────┘
-       │ BCrypt
-       ▼
-┌──────────────┐
-│   MongoDB    │
-└──────┬───────┘
-       │ credenciais válidas
-       ▼
-┌──────────────┐
-│  JwtService  │
-└──────┬───────┘
-       │
-       ▼
-      JWT
-       │
-       ▼
-┌──────────────┐
-│    Cliente   │
-└──────────────┘
-```
-
-Nas próximas requisições:
-
-```text
-Cliente
-   │
-   │ Authorization: Bearer JWT
-   ▼
-JwtAuthenticationFilter
-   │
-   ▼
-JwtService
-   │
-   ▼
-Spring Security
-   │
-   ▼
-Rota protegida
-```
-
-O token atualmente possui validade de **24 horas**.
-
----
-
-# 👤 Usuário e perfil
-
-O usuário autenticado pode acessar seus próprios dados através da identidade extraída do JWT.
-
 ### Usuário
 
-```http
+``` http
 GET /api/users/me
 ```
 
-Retorna os dados públicos do usuário autenticado.
-
 ### Perfil
 
-```http
+``` http
 POST /api/profile
 GET /api/profile
 PUT /api/profile
 ```
 
-O perfil contém informações como:
+### Exercícios
 
-- Data de nascimento
-- Altura
-- Peso
-- Gênero opcional
-- Objetivo
-- Nível de experiência
-- Dias disponíveis para treino
-- Duração do treino
-- Local de treino
-- Equipamentos disponíveis
-- Exercícios preferidos
-- Restrições e observações
-
-A criação duplicada de perfil é bloqueada e os dados recebem validação antes de serem persistidos.
-
----
-
-# 🏋️ Banco de exercícios
-
-O módulo de exercícios foi concluído na **Parte 3** do desenvolvimento.
-
-Cada exercício possui:
-
-```text
-id
-name
-description
-primaryMuscleGroup
-secondaryMuscleGroups
-equipment
-difficulty
-instructions
-tips
-commonMistakes
-alternatives
-createdAt
-updatedAt
+``` http
+POST   /api/exercises
+GET    /api/exercises
+GET    /api/exercises/{id}
+GET    /api/exercises/muscle/{primaryMuscleGroup}
+GET    /api/exercises/equipment/{equipment}
+GET    /api/exercises/difficulty/{difficulty}
+GET    /api/exercises/filter?muscle=PEITO&equipment=BARRA
+PUT    /api/exercises/{id}
+DELETE /api/exercises/{id}
 ```
 
-O backend possui CRUD completo:
+### Workout e execução
 
-- Criar exercício
-- Listar exercícios
-- Buscar por ID
-- Atualizar exercício
-- Excluir exercício
+``` http
+POST /api/workouts/{workoutId}/exercises
+GET  /api/workouts/{workoutId}/exercises
+PUT  /api/workouts/{workoutId}/exercises/{workoutExerciseId}
 
-Também existem filtros por:
+POST /api/workout-sessions
+PUT  /api/workout-sessions/{sessionId}/finish
+GET  /api/workout-sessions
+GET  /api/workout-sessions/{sessionId}
 
-- Grupo muscular principal
-- Equipamento
-- Dificuldade
-- Grupo muscular + equipamento
-
-### Normalização
-
-Os valores categóricos são normalizados pelo backend antes de serem armazenados e consultados.
-
-Por exemplo:
-
-```text
-peito
-Peito
- PEITO 
+POST /api/workout-sessions/{sessionId}/sets/{workoutExerciseId}
+GET  /api/workout-sessions/{sessionId}/sets
 ```
 
-são tratados como:
+### Performance
 
-```text
-PEITO
+``` http
+GET /api/performance/history
+GET /api/performance/summary
+GET /api/performance/exercise/{exerciseId}
 ```
-
-O mesmo princípio é aplicado a equipamentos, dificuldades e filtros combinados.
-
-Os textos descritivos, como nome, descrição e instruções, continuam preservando sua escrita normal, apenas removendo espaços desnecessários nas extremidades.
-
----
-
-# 🏋️ Treinos
-
-O módulo de treinos foi implementado na **Parte 4** e a execução real dos treinos foi adicionada na **Parte 5**.
-
-A modelagem separa o **treino planejado** da sua execução. `Workout` e `WorkoutExercise` representam o planejamento, enquanto `WorkoutSession` e `SetLog` registram o que realmente aconteceu durante o treino.
-
-## `Workout`
-
-Representa o treino planejado pelo usuário:
-
-```text
-id
-userId
-name
-description
-goal
-estimatedDuration
-active
-createdAt
-updatedAt
-```
-
-## `WorkoutExercise`
-
-Representa um exercício dentro de um treino, mantendo sua configuração e ordem:
-
-```text
-id
-workoutId
-exerciseId
-exerciseOrder
-sets
-repetitions
-restSeconds
-targetWeight
-notes
-createdAt
-updatedAt
-```
-
-O vínculo utiliza os IDs das entidades existentes. O backend valida que:
-
-- O treino pertence ao usuário autenticado.
-- O exercício informado existe no banco.
-- O mesmo exercício não seja adicionado duas vezes ao mesmo treino.
-- O `WorkoutExercise` realmente pertence ao `Workout` informado na URL.
-
-### Funcionalidades implementadas
-
-- Criar treino
-- Listar treinos
-- Buscar treino por ID
-- Atualizar treino
-- Excluir treino
-- Adicionar exercício ao treino
-- Listar exercícios de um treino
-- Atualizar exercício dentro do treino
-- Configurar ordem, séries, repetições, descanso e carga-alvo
-- Adicionar observações ao exercício do treino
-- Proteção por JWT
-- Validação de pertencimento entre usuário, treino e exercício
-
-### Arquitetura de planejamento e execução
-
-A execução é separada do planejamento:
-
-```text
-Workout
-   ↓
-Treino planejado
-   ↓
-WorkoutExercise
-   ↓
-Exercícios + configuração
-
-WorkoutSession
-   ↓
-Execução de um treino
-   ↓
-SetLog
-   ↓
-Registro de cada série executada
-```
-
-Essa separação permite construir histórico, evolução, volume, PRs e recursos de IA sem misturar o planejamento com os dados reais de execução.
-
-## `WorkoutSession`
-
-Representa uma execução específica de um treino planejado:
-
-```text
-id
-userId
-workoutId
-startedAt
-finishedAt
-durationSeconds
-status
-createdAt
-updatedAt
-```
-
-Status utilizados atualmente:
-
-```text
-IN_PROGRESS
-COMPLETED
-CANCELLED
-```
-
-## `SetLog`
-
-Registra cada série realmente executada durante uma sessão:
-
-```text
-id
-workoutSessionId
-workoutExerciseId
-setNumber
-weight
-repetitions
-restSeconds
-completed
-notes
-createdAt
-updatedAt
-```
-
-### Funcionalidades implementadas na Parte 5
-
-- Iniciar uma sessão de treino
-- Finalizar uma sessão
-- Listar histórico de sessões do usuário
-- Buscar uma sessão específica
-- Registrar séries executadas
-- Consultar séries de uma sessão
-- Validar que a sessão pertence ao usuário autenticado
-- Validar que o exercício pertence ao treino da sessão
-- Impedir registro de séries após a sessão ser finalizada
-- Registrar carga, repetições, descanso, conclusão e observações
-- Proteção por JWT
-
----
-
-# 🗄️ Banco de dados
-
-O projeto utiliza **MongoDB Atlas**.
-
-Banco:
-
-```text
-fitness
-```
-
-Coleções atuais:
-
-```text
-users
-user_profiles
-exercises
-workouts
-workout_exercises
-workout_sessions
-set_logs
-```
-
-### `User`
-
-```text
-id
-name
-email
-passwordHash
-role
-createdAt
-updatedAt
-```
-
-### `UserProfile`
-
-```text
-id
-userId
-birthDate
-height
-weight
-gender
-goal
-experienceLevel
-trainingDays
-trainingDuration
-trainingLocation
-availableEquipment
-preferredExercises
-restrictions
-createdAt
-updatedAt
-```
-
-### `Exercise`
-
-```text
-id
-name
-description
-primaryMuscleGroup
-secondaryMuscleGroups
-equipment
-difficulty
-instructions
-tips
-commonMistakes
-alternatives
-createdAt
-updatedAt
-```
-
-### `Workout`
-
-```text
-id
-userId
-name
-description
-goal
-estimatedDuration
-active
-createdAt
-updatedAt
-```
-
-### `WorkoutExercise`
-
-```text
-id
-workoutId
-exerciseId
-exerciseOrder
-sets
-repetitions
-restSeconds
-targetWeight
-notes
-createdAt
-updatedAt
-```
-
-### `WorkoutSession`
-
-```text
-id
-userId
-workoutId
-startedAt
-finishedAt
-durationSeconds
-status
-createdAt
-updatedAt
-```
-
-### `SetLog`
-
-```text
-id
-workoutSessionId
-workoutExerciseId
-setNumber
-weight
-repetitions
-restSeconds
-completed
-notes
-createdAt
-updatedAt
-```
-
-O acesso ao MongoDB é feito através da variável de ambiente:
-
-```text
-MONGODB_URI
-```
-
-A aplicação não deve armazenar credenciais do banco diretamente no código.
-
----
-
-# ⚙️ Configuração
-
-## Requisitos
-
-Antes de executar o projeto, tenha instalado:
-
-- Java
-- Maven
-- IntelliJ IDEA ou outra IDE compatível
-- MongoDB Atlas
-- Git
-
----
-
-## Variáveis de ambiente
-
-A aplicação utiliza:
-
-```text
-MONGODB_URI
-JWT_SECRET
-```
-
-### `MONGODB_URI`
-
-String de conexão fornecida pelo MongoDB Atlas.
-
-### `JWT_SECRET`
-
-Chave utilizada para assinar os tokens JWT.
-
-> ⚠️ Nunca publique essas variáveis no GitHub.
-
----
-
-# 📝 `application.yml`
-
-A configuração utiliza variáveis de ambiente:
-
-```yaml
-spring:
-  application:
-    name: fitness-backend
-
-  mongodb:
-    uri: ${MONGODB_URI}
-    database: fitness
-
-server:
-  port: 8080
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: 86400000
-```
-
----
-
-# 🌐 Endpoints atuais
-
-## Health Check
-
-### `GET /api/health`
-
-Endpoint público para verificar se a API está funcionando.
-
-**Público:** ✅
-
-Resposta:
-
-```text
-Fitness Backend funcionando!
-```
-
----
 
 ## Autenticação
 
-### `POST /api/auth/register`
+A API utiliza BCrypt para senhas e JWT para autenticação stateless.
 
-Cria uma nova conta.
+O usuário autenticado é identificado pelo email presente no JWT. O
+cliente não deve enviar `userId` para determinar a identidade da
+requisição.
 
-**Público:** ✅
+## Arquitetura de treino
 
-### `POST /api/auth/login`
-
-Autentica um usuário e retorna um JWT.
-
-**Público:** ✅
-
----
-
-## Usuário
-
-### `GET /api/users/me`
-
-Retorna os dados do usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
----
-
-## Perfil
-
-### `POST /api/profile`
-
-Cria o perfil do usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/profile`
-
-Retorna o perfil do usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `PUT /api/profile`
-
-Atualiza o perfil do usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
----
-
-## Exercícios
-
-### `POST /api/exercises`
-
-Cadastra um exercício.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/exercises`
-
-Lista todos os exercícios em ordem alfabética.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/exercises/{id}`
-
-Busca um exercício pelo ID.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/exercises/muscle/{primaryMuscleGroup}`
-
-Busca exercícios pelo grupo muscular principal.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Exemplo:
-
-```http
-GET /api/exercises/muscle/peito
-```
-
-### `GET /api/exercises/equipment/{equipment}`
-
-Busca exercícios pelo equipamento.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Exemplo:
-
-```http
-GET /api/exercises/equipment/halter
-```
-
-### `GET /api/exercises/difficulty/{difficulty}`
-
-Busca exercícios pela dificuldade.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Exemplo:
-
-```http
-GET /api/exercises/difficulty/iniciante
-```
-
-### `GET /api/exercises/filter?muscle={muscle}&equipment={equipment}`
-
-Filtra simultaneamente por grupo muscular principal e equipamento.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Exemplo:
-
-```http
-GET /api/exercises/filter?muscle=peito&equipment=barra
-```
-
-### `PUT /api/exercises/{id}`
-
-Atualiza um exercício.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `DELETE /api/exercises/{id}`
-
-Exclui um exercício.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Resposta de sucesso:
-
-```http
-204 No Content
-```
-
----
-
-## Treinos
-
-### `POST /api/workouts`
-
-Cria um treino para o usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/workouts`
-
-Lista os treinos do usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/workouts/{id}`
-
-Busca um treino específico pelo ID.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `PUT /api/workouts/{id}`
-
-Atualiza os dados de um treino.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `DELETE /api/workouts/{id}`
-
-Exclui um treino.
-
-**Autenticação:** 🔒 Bearer JWT
-
-## Exercícios do treino
-
-### `POST /api/workouts/{workoutId}/exercises`
-
-Adiciona um exercício existente ao treino.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/workouts/{workoutId}/exercises`
-
-Lista os exercícios configurados dentro de um treino.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `PUT /api/workouts/{workoutId}/exercises/{workoutExerciseId}`
-
-Atualiza a configuração de um exercício dentro do treino.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Exemplo de body:
-
-```json
-{
-  "exerciseOrder": 1,
-  "sets": 3,
-  "repetitions": "10-12",
-  "restSeconds": 120,
-  "targetWeight": 22.0,
-  "notes": "Aumentar carga somente mantendo a execução correta"
-}
-```
-
-## Sessões de treino
-
-### `POST /api/workout-sessions`
-
-Inicia uma sessão para um treino pertencente ao usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Body:
-
-```json
-{
-  "workoutId": "SEU_WORKOUT_ID"
-}
-```
-
-### `PUT /api/workout-sessions/{sessionId}/finish`
-
-Finaliza uma sessão em andamento e registra sua duração.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Body:
-
-```json
-{
-  "durationSeconds": 3720
-}
-```
-
-### `GET /api/workout-sessions`
-
-Lista as sessões do usuário autenticado, ordenadas da mais recente para a mais antiga.
-
-**Autenticação:** 🔒 Bearer JWT
-
-### `GET /api/workout-sessions/{sessionId}`
-
-Busca uma sessão específica pertencente ao usuário autenticado.
-
-**Autenticação:** 🔒 Bearer JWT
-
-## Séries executadas
-
-### `POST /api/workout-sessions/{sessionId}/sets/{workoutExerciseId}`
-
-Registra uma série executada dentro de uma sessão em andamento.
-
-**Autenticação:** 🔒 Bearer JWT
-
-Body:
-
-```json
-{
-  "setNumber": 1,
-  "weight": 25.0,
-  "repetitions": 12,
-  "restSeconds": 90,
-  "completed": true,
-  "notes": "Boa execução"
-}
-```
-
-### `GET /api/workout-sessions/{sessionId}/sets`
-
-Lista todas as séries registradas na sessão.
-
-**Autenticação:** 🔒 Bearer JWT
-
----
-
-# ⚠️ Tratamento de erros
-
-As validações e erros de regras de negócio são centralizados pelo `GlobalExceptionHandler`.
-
-A resposta segue o formato:
-
-```json
-{
-  "status": 400,
-  "message": "Exercício não encontrado",
-  "timestamp": "2026-09-22T16:00:00"
-}
-```
-
-Para erros de validação, as mensagens dos campos inválidos são agrupadas em uma resposta única.
-
-> Observação: atualmente `RuntimeException` é tratado como `400 Bad Request`. A diferenciação futura entre `400`, `404`, `401`, `403` e `500` será feita através de exceções específicas.
-
----
-
-# 🧪 Testes realizados
-
-## MongoDB
-
-- [x] Conexão com MongoDB Atlas
-- [x] Autenticação no Atlas
-- [x] Persistência de usuários
-- [x] Persistência de perfis
-- [x] Persistência de exercícios
-- [x] Persistência de treinos
-- [x] Persistência de exercícios dos treinos
-- [x] Persistência de sessões de treino
-- [x] Persistência de séries executadas
-
-## Cadastro e autenticação
-
-- [x] `POST /api/auth/register`
-- [x] Validação de dados
-- [x] Verificação de e-mail existente
-- [x] BCrypt
-- [x] Salvamento no MongoDB
-- [x] Resposta sem `passwordHash`
-- [x] `POST /api/auth/login`
-- [x] Verificação da senha
-- [x] Geração de JWT
-- [x] Bearer Token
-- [x] Rotas protegidas
-- [x] Sessão STATELESS
-
-## Usuário e perfil
-
-- [x] `GET /api/users/me`
-- [x] `POST /api/profile`
-- [x] `GET /api/profile`
-- [x] `PUT /api/profile`
-- [x] Validações de perfil
-- [x] Bloqueio de criação de perfil duplicado
-- [x] Identidade baseada no JWT
-
-## Exercícios
-
-- [x] Cadastro de exercícios
-- [x] Listagem
-- [x] Busca por ID
-- [x] Busca por grupo muscular
-- [x] Busca por equipamento
-- [x] Busca por dificuldade
-- [x] Filtro combinado
-- [x] Atualização
-- [x] Exclusão
-- [x] DTOs de entrada e saída
-- [x] Validação dos requests
-- [x] Normalização de valores categóricos
-- [x] Tratamento global de erros
-
-## Treinos
-
-- [x] Criação de treino
-- [x] Listagem de treinos
-- [x] Busca de treino por ID
-- [x] Atualização de treino
-- [x] Exclusão de treino
-- [x] Adição de exercício ao treino
-- [x] Listagem de exercícios do treino
-- [x] Atualização de exercício do treino
-- [x] Validação de pertencimento do treino ao usuário
-- [x] Validação de existência do exercício
-- [x] Validação de vínculo entre `Workout` e `WorkoutExercise`
-- [x] Configuração de séries, repetições, descanso e carga-alvo
-
-## Execução de treinos
-
-- [x] Início de `WorkoutSession`
-- [x] Registro de `startedAt`
-- [x] Registro de séries com `SetLog`
-- [x] Listagem das séries de uma sessão
-- [x] Finalização de sessão
-- [x] Registro de duração
-- [x] Histórico de sessões
-- [x] Busca de sessão por ID
-- [x] Bloqueio de registro após finalização
-- [x] Validação de pertencimento da sessão ao usuário
-- [x] Validação de pertencimento do exercício ao treino da sessão
-
-## Segurança
-
-- [x] Spring Security
-- [x] JWT Filter
-- [x] Bearer Token
-- [x] Rotas protegidas
-- [x] Sessão STATELESS
-- [x] Secret via variável de ambiente
-- [x] Senhas com BCrypt
-
----
-
-# 🚧 Roadmap
-
-## Parte 1 — Backend base e autenticação
-
-**Status: ✅ Concluída**
-
-- [x] Spring Boot
-- [x] MongoDB Atlas
-- [x] Estrutura inicial
-- [x] Usuários
-- [x] Cadastro
-- [x] BCrypt
-- [x] Login
-- [x] JWT
-- [x] Spring Security
-- [x] Variáveis de ambiente
-
----
-
-## Parte 2 — Usuário e perfil
-
-**Status: ✅ Concluída**
-
-- [x] `GET /api/users/me`
-- [x] `UserProfile`
-- [x] Criação de perfil
-- [x] Consulta de perfil
-- [x] Atualização de perfil
-- [x] Objetivo
-- [x] Experiência
-- [x] Altura
-- [x] Peso
-- [x] Dias disponíveis
-- [x] Duração do treino
-- [x] Local de treino
-- [x] Equipamentos disponíveis
-- [x] Preferências
-- [x] Limitações e observações
-- [x] Validações
-- [x] Proteção por JWT
-
----
-
-## Parte 3 — Exercícios
-
-**Status: ✅ Concluída**
-
-- [x] Cadastro de exercícios
-- [x] Grupos musculares
-- [x] Equipamentos
-- [x] Dificuldade
-- [x] Instruções
-- [x] Dicas
-- [x] Erros comuns
-- [x] Alternativas
-- [x] CRUD completo
-- [x] DTOs
-- [x] Validação
-- [x] Filtros
-- [x] Normalização dos valores categóricos
-- [x] Tratamento global de erros
-
-### Próximas evoluções do módulo
-
-- [ ] Imagens
-- [ ] Vídeos
-- [ ] Mídia em storage externo
-- [ ] Alternativas vinculadas por ID
-- [ ] Exceções específicas para `404`
-
----
-
-## Parte 4 — Treinos
-
-**Status: ✅ Concluída**
-
-### Treino planejado
-
-- [x] Criar treino
-- [x] Listar treinos
-- [x] Buscar treino por ID
-- [x] Editar treino
-- [x] Excluir treino
-- [x] Controle de treino ativo/inativo
-
-### Exercícios do treino
-
-- [x] Adicionar exercícios
-- [x] Listar exercícios do treino
-- [x] Atualizar exercício do treino
-- [x] Ordem dos exercícios
-- [x] Séries
-- [x] Repetições
-- [x] Descanso
-- [x] Carga-alvo
-- [x] Observações
-- [x] Validação de pertencimento ao usuário
-- [x] Validação do vínculo entre treino e exercício
-
-### Evoluções futuras do módulo
-
-- [ ] Reordenação dedicada de exercícios
-- [ ] Edição/exclusão de séries registradas
-- [ ] Status `CANCELLED` com endpoint dedicado
-- [ ] Regras específicas para impedir sessões duplicadas em andamento
-
----
-
-## Parte 5 — Execução de treinos
-
-**Status: ✅ Concluída**
-
-- [x] `WorkoutSession`
-- [x] Início da sessão
-- [x] Finalização da sessão
-- [x] Duração da sessão
-- [x] Histórico de sessões
-- [x] `SetLog`
-- [x] Registro de carga
-- [x] Registro de repetições
-- [x] Registro de descanso
-- [x] Registro de conclusão da série
-- [x] Observações da série
-- [x] Validações de segurança e pertencimento
-
----
-
-## Parte 6 — Evolução
-
-- [ ] Volume de treino
-- [ ] Cargas
-- [ ] Repetições
-- [ ] Frequência
-- [ ] PRs
-- [ ] Gráficos
-- [ ] Comparação de desempenho
-
----
-
-## Parte 7 — Inteligência Artificial
-
-- [ ] Integração com Gemini
-- [ ] Contexto baseado no perfil
-- [ ] Geração de treinos
-- [ ] Avaliação de treinos
-- [ ] Sugestão de ajustes
-- [ ] Respostas estruturadas
-- [ ] Validação das respostas da IA
-- [ ] Uso exclusivo de exercícios existentes no banco
-
-A IA não deverá acessar o banco diretamente.
-
-O fluxo planejado será:
-
-```text
-Usuário
-   ↓
-Aplicativo
-   ↓
-Backend
-   ↓
-Seleciona dados relevantes
-   ↓
-Monta contexto
-   ↓
-Gemini
-   ↓
-Resposta estruturada
-   ↓
-Backend valida
-   ↓
-Aplicativo
-```
-
----
-
-## Parte 8 — Nutrição
-
-- [ ] Perfil nutricional
-- [ ] Metas calóricas
-- [ ] Macronutrientes
-- [ ] Diário alimentar
-- [ ] Refeições
-- [ ] Alimentos
-- [ ] Base nutricional
-- [ ] Progresso alimentar
-
----
-
-## Parte 9 — IA nutricional
-
-- [ ] Análise de foto do prato
-- [ ] Identificação de alimentos
-- [ ] Estimativa de porções
-- [ ] Cálculo nutricional
-- [ ] Correção manual
-- [ ] Histórico alimentar
-
-> As informações nutricionais geradas por IA serão tratadas como **estimativas**, permitindo correção pelo usuário.
-
----
-
-# 📱 Aplicativo
-
-O backend será consumido inicialmente por um aplicativo desenvolvido com:
-
-```text
-React Native
-+
-Expo
-+
-TypeScript
-```
-
-O objetivo é oferecer suporte desde o início para:
-
-- 🤖 Android
-- 🍎 iOS
-
-O backend permanece independente da plataforma.
-
----
-
-# 🔐 Boas práticas de segurança
-
-O projeto segue algumas regras desde o início:
-
-- 🔒 Senhas nunca são armazenadas em texto puro.
-- 🔐 Senhas são protegidas com BCrypt.
-- 🎫 Autenticação utiliza JWT.
-- 🌐 Rotas protegidas exigem autenticação.
-- 🚫 Secrets não ficam no código.
-- 🗄️ Credenciais do MongoDB ficam em variáveis de ambiente.
-- 📱 O cliente não envia `userId` para acessar os próprios dados; a identidade é obtida através do JWT.
-- 🧹 Dados temporários de teste devem ser removidos antes de cada release.
-
----
-
-# 🐳 Infraestrutura planejada
-
-A infraestrutura futura seguirá aproximadamente:
-
-```text
-                 ┌─────────────────┐
-                 │   Mobile App    │
-                 │ Android / iOS   │
-                 └────────┬────────┘
-                          │
-                          ▼
-                    ┌───────────┐
-                    │ Cloudflare│
-                    └─────┬─────┘
-                          │
-                          ▼
-                   ┌───────────────┐
-                   │     Nginx     │
-                   └───────┬───────┘
-                           │
-                           ▼
-                  ┌─────────────────┐
-                  │ Spring Boot API │
-                  │     Docker      │
-                  └───────┬─────────┘
-                          │
-                  ┌───────┼──────────┐
-                  ▼       ▼          ▼
-             MongoDB   Gemini     Storage
-              Atlas      AI       de mídia
-```
-
-A hospedagem planejada do backend será em uma **VPS da Hostinger**.
-
----
-
-# 📂 Organização do desenvolvimento
-
-O projeto está sendo desenvolvido de forma incremental.
-
-Cada etapa deve:
-
-1. Criar uma funcionalidade.
-2. Testar localmente.
-3. Validar integração.
-4. Limpar código temporário.
-5. Atualizar este README.
-6. Criar um commit organizado.
-7. Enviar para o GitHub.
-
----
-
-# 📌 Estado atual
-
-**Versão:** `Parte 5`
-
-**Status:** 🟢 Backend core funcional + módulos de usuário, perfil, exercícios, treinos e execução de treinos concluídos
-
-O sistema atualmente consegue:
-
-```text
-Criar usuário
-     ↓
-Salvar no MongoDB
-     ↓
-Proteger senha com BCrypt
-     ↓
-Fazer login
-     ↓
-Gerar JWT
-     ↓
-Autenticar requisições
-     ↓
-Criar e gerenciar perfil
-     ↓
-Criar e gerenciar exercícios
-     ↓
-Filtrar exercícios
-     ↓
-Criar e gerenciar treinos
-     ↓
-Adicionar e configurar exercícios nos treinos
-     ↓
-Iniciar sessões de treino
-     ↓
-Registrar séries executadas
-     ↓
-Finalizar sessões e consultar histórico
-     ↓
-Validar entradas
-     ↓
-Padronizar categorias
-     ↓
-Retornar erros estruturados
-```
-
-### Próximo módulo
-
-A próxima etapa será **Parte 6 — Evolução**, focada em transformar os registros de execução em métricas de desempenho.
-
-Principais objetivos:
-
-- volume de treino;
-- evolução de cargas e repetições;
-- frequência;
-- PRs;
-- gráficos;
-- comparação de desempenho.
-
-A arquitetura atual é:
-
-```text
+``` text
 Workout
-   ↓
-Treino planejado
    ↓
 WorkoutExercise
    ↓
-Exercícios + configuração
+Exercise
 
+Workout
+   ↓
 WorkoutSession
    ↓
-Execução de um treino
-   ↓
 SetLog
-   ↓
-Registro de cada série executada
 ```
 
-Essa separação permite construir histórico e métricas sem misturar planejamento com execução.
+`WorkoutExercise.repetitions` é `String` no modelo atual.
 
----
+Uma sessão finalizada não deve aceitar novas séries.
 
-# 👨‍💻 Desenvolvimento
+## Performance
 
-Projeto desenvolvido como uma plataforma real de treino e nutrição personalizada, com foco em:
+A camada de performance trabalha com carga, repetições, volume, PR,
+sessões concluídas e histórico.
 
-- Engenharia de software
-- Backend
-- Segurança
-- Mobile
-- Banco de dados
-- Inteligência Artificial
-- Experiência do usuário
-- Escalabilidade
+## Parte 7 --- Inteligência Artificial
 
----
+A Parte 7 está parcialmente implementada.
 
-## 📜 Licença
+### Concluído
 
-Projeto em desenvolvimento.
+-   Integração com Gemini
+-   Contexto baseado no perfil
+-   Geração de treinos
+-   Respostas estruturadas
+-   Validação das respostas
+-   Uso exclusivo de exercícios existentes no banco
+-   Uso do histórico de desempenho
+-   `targetWeight`
+-   Validação de progressão de carga
+-   Salvamento do treino gerado
 
-A definição da licença será realizada posteriormente.
+### Pendente
+
+-   Avaliação de treinos
+-   Sugestão de ajustes
+
+### Endpoints
+
+``` http
+POST /api/ai/test
+GET  /api/ai/analyze-profile
+POST /api/ai/generate-workout
+```
+
+### Fluxo
+
+``` text
+Usuário
+  ↓
+Aplicativo
+  ↓
+Backend
+  ↓
+Seleciona dados relevantes
+  ↓
+Monta contexto
+  ↓
+Gemini
+  ↓
+Resposta estruturada
+  ↓
+Backend valida
+  ↓
+Aplicativo
+```
+
+A IA não acessa o banco diretamente.
+
+### Limitação atual do Gemini
+
+Durante os testes foi atingida a cota diária do Free Tier:
+
+``` text
+429 RESOURCE_EXHAUSTED
+GenerateRequestsPerDayPerModel-FreeTier
+```
+
+A requisição chegou ao Gemini e foi recusada pela cota disponível.
+
+## Parte 8 --- Nutrição
+
+A próxima etapa é Nutrição, inicialmente sem IA.
+
+Escopo:
+
+-   [ ] Perfil nutricional
+-   [ ] Metas calóricas
+-   [ ] Macronutrientes
+-   [ ] Diário alimentar
+-   [ ] Refeições
+-   [ ] Alimentos
+-   [ ] Base nutricional
+-   [ ] Progresso alimentar
+
+Estrutura planejada:
+
+``` text
+nutrition
+├── controller
+├── dto
+├── model
+├── repository
+└── service
+```
+
+### Primeiro passo
+
+Criar a base nutricional/alimentos.
+
+Depois:
+
+1.  CRUD de alimentos
+2.  Perfil nutricional
+3.  Metas calóricas
+4.  Macronutrientes
+5.  Refeições
+6.  Diário alimentar
+7.  Progresso alimentar
+
+## Parte 9 --- IA nutricional
+
+Fica para o futuro.
+
+Planejamento:
+
+-   análise de foto do prato
+-   identificação de alimentos
+-   estimativa de porções
+-   cálculo nutricional
+-   correção manual
+-   histórico alimentar
+
+## Segurança
+
+Implementado:
+
+-   BCrypt
+-   JWT
+-   autenticação stateless
+-   secrets por variáveis de ambiente
+-   identidade baseada no JWT
+-   MongoDB URI fora do código
+-   chave Gemini fora do código
+
+## Execução local
+
+Requisitos:
+
+-   Java 26
+-   Maven
+-   MongoDB Atlas
+-   IDE Java
+
+Executar:
+
+``` bash
+mvn spring-boot:run
+```
+
+Servidor:
+
+``` text
+http://localhost:8080
+```
+
+Health:
+
+``` text
+http://localhost:8080/api/health
+```
+
+## Próximos passos
+
+1.  Implementar Parte 8 --- Nutrição.
+2.  Começar pela base nutricional/alimentos.
+3.  Depois voltar à Parte 7 para implementar avaliação de treinos e
+    sugestão de ajustes.
+4.  Parte 9 --- IA nutricional permanece futura.
+
+## Git
+
+Para registrar o estado atual:
+
+``` bash
+git status
+git add .
+git commit -m "feat: finaliza base das partes 1 a 7 e inicia parte 8 de nutricao"
+git push origin main
+```
+
+O commit registra o estado atual: a integração principal da IA foi
+construída, a Parte 7 ainda possui avaliação de treinos e sugestão de
+ajustes pendentes, e a Parte 8 passa a ser a etapa atual de
+desenvolvimento.
