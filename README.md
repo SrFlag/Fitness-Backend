@@ -106,6 +106,27 @@ src/main/java/br/com/fitness
 │   └── service
 │       └── UserProfileService.java
 │
+├── workout
+│   ├── controller
+│   │   ├── WorkoutController.java
+│   │   └── WorkoutExerciseController.java
+│   ├── dto
+│   │   ├── AddWorkoutExerciseRequest.java
+│   │   ├── CreateWorkoutRequest.java
+│   │   ├── UpdateWorkoutRequest.java
+│   │   ├── UpdateWorkoutExerciseRequest.java
+│   │   ├── WorkoutExerciseResponse.java
+│   │   └── WorkoutResponse.java
+│   ├── model
+│   │   ├── Workout.java
+│   │   └── WorkoutExercise.java
+│   ├── repository
+│   │   ├── WorkoutExerciseRepository.java
+│   │   └── WorkoutRepository.java
+│   └── service
+│       ├── WorkoutExerciseService.java
+│       └── WorkoutService.java
+│
 └── user
     ├── controller
     │   └── UserController.java
@@ -353,6 +374,94 @@ Os textos descritivos, como nome, descrição e instruções, continuam preserva
 
 ---
 
+# 🏋️ Treinos
+
+O módulo de treinos foi implementado na **Parte 4**.
+
+A modelagem separa o **treino planejado** dos exercícios que pertencem a ele. A execução do treino e o registro individual de séries serão implementados em etapas posteriores.
+
+## `Workout`
+
+Representa o treino planejado pelo usuário:
+
+```text
+id
+userId
+name
+description
+goal
+estimatedDuration
+active
+createdAt
+updatedAt
+```
+
+## `WorkoutExercise`
+
+Representa um exercício dentro de um treino, mantendo sua configuração e ordem:
+
+```text
+id
+workoutId
+exerciseId
+exerciseOrder
+sets
+repetitions
+restSeconds
+targetWeight
+notes
+createdAt
+updatedAt
+```
+
+O vínculo utiliza os IDs das entidades existentes. O backend valida que:
+
+- O treino pertence ao usuário autenticado.
+- O exercício informado existe no banco.
+- O mesmo exercício não seja adicionado duas vezes ao mesmo treino.
+- O `WorkoutExercise` realmente pertence ao `Workout` informado na URL.
+
+### Funcionalidades implementadas
+
+- Criar treino
+- Listar treinos
+- Buscar treino por ID
+- Atualizar treino
+- Excluir treino
+- Adicionar exercício ao treino
+- Listar exercícios de um treino
+- Atualizar exercício dentro do treino
+- Configurar ordem, séries, repetições, descanso e carga-alvo
+- Adicionar observações ao exercício do treino
+- Proteção por JWT
+- Validação de pertencimento entre usuário, treino e exercício
+
+### Arquitetura planejada
+
+A execução será separada posteriormente do planejamento:
+
+```text
+Workout
+   ↓
+Treino planejado
+   ↓
+WorkoutExercise
+   ↓
+Exercícios + configuração
+
+WorkoutSession
+   ↓
+Execução de um treino
+   ↓
+SetLog
+   ↓
+Registro de cada série executada
+```
+
+Essa separação permite construir histórico, evolução, volume, PRs e recursos de IA sem misturar o planejamento com os dados reais de execução.
+
+---
+
 # 🗄️ Banco de dados
 
 O projeto utiliza **MongoDB Atlas**.
@@ -369,6 +478,8 @@ Coleções atuais:
 users
 user_profiles
 exercises
+workouts
+workout_exercises
 ```
 
 ### `User`
@@ -418,6 +529,36 @@ instructions
 tips
 commonMistakes
 alternatives
+createdAt
+updatedAt
+```
+
+### `Workout`
+
+```text
+id
+userId
+name
+description
+goal
+estimatedDuration
+active
+createdAt
+updatedAt
+```
+
+### `WorkoutExercise`
+
+```text
+id
+workoutId
+exerciseId
+exerciseOrder
+sets
+repetitions
+restSeconds
+targetWeight
+notes
 createdAt
 updatedAt
 ```
@@ -650,6 +791,73 @@ Resposta de sucesso:
 
 ---
 
+## Treinos
+
+### `POST /api/workouts`
+
+Cria um treino para o usuário autenticado.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `GET /api/workouts`
+
+Lista os treinos do usuário autenticado.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `GET /api/workouts/{id}`
+
+Busca um treino específico pelo ID.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `PUT /api/workouts/{id}`
+
+Atualiza os dados de um treino.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `DELETE /api/workouts/{id}`
+
+Exclui um treino.
+
+**Autenticação:** 🔒 Bearer JWT
+
+## Exercícios do treino
+
+### `POST /api/workouts/{workoutId}/exercises`
+
+Adiciona um exercício existente ao treino.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `GET /api/workouts/{workoutId}/exercises`
+
+Lista os exercícios configurados dentro de um treino.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `PUT /api/workouts/{workoutId}/exercises/{workoutExerciseId}`
+
+Atualiza a configuração de um exercício dentro do treino.
+
+**Autenticação:** 🔒 Bearer JWT
+
+Exemplo de body:
+
+```json
+{
+  "exerciseOrder": 1,
+  "sets": 3,
+  "repetitions": "10-12",
+  "restSeconds": 120,
+  "targetWeight": 22.0,
+  "notes": "Aumentar carga somente mantendo a execução correta"
+}
+```
+
+---
+
 # ⚠️ Tratamento de erros
 
 As validações e erros de regras de negócio são centralizados pelo `GlobalExceptionHandler`.
@@ -720,6 +928,21 @@ Para erros de validação, as mensagens dos campos inválidos são agrupadas em 
 - [x] Validação dos requests
 - [x] Normalização de valores categóricos
 - [x] Tratamento global de erros
+
+## Treinos
+
+- [x] Criação de treino
+- [x] Listagem de treinos
+- [x] Busca de treino por ID
+- [x] Atualização de treino
+- [x] Exclusão de treino
+- [x] Adição de exercício ao treino
+- [x] Listagem de exercícios do treino
+- [x] Atualização de exercício do treino
+- [x] Validação de pertencimento do treino ao usuário
+- [x] Validação de existência do exercício
+- [x] Validação de vínculo entre `Workout` e `WorkoutExercise`
+- [x] Configuração de séries, repetições, descanso e carga-alvo
 
 ## Segurança
 
@@ -807,37 +1030,39 @@ Para erros de validação, as mensagens dos campos inválidos são agrupadas em 
 
 ## Parte 4 — Treinos
 
-**Status: 🔜 Próxima etapa**
+**Status: ✅ Concluída**
 
-A estrutura será separada entre planejamento e execução:
+### Treino planejado
 
-```text
-Workout
-   ↓
-Treino planejado
+- [x] Criar treino
+- [x] Listar treinos
+- [x] Buscar treino por ID
+- [x] Editar treino
+- [x] Excluir treino
+- [x] Controle de treino ativo/inativo
 
-WorkoutSession
-   ↓
-Execução de um treino
+### Exercícios do treino
 
-SetLog
-   ↓
-Registro de cada série executada
-```
+- [x] Adicionar exercícios
+- [x] Listar exercícios do treino
+- [x] Atualizar exercício do treino
+- [x] Ordem dos exercícios
+- [x] Séries
+- [x] Repetições
+- [x] Descanso
+- [x] Carga-alvo
+- [x] Observações
+- [x] Validação de pertencimento ao usuário
+- [x] Validação do vínculo entre treino e exercício
 
-Planejado:
+### Próxima evolução do módulo
 
-- [ ] Criar treino
-- [ ] Editar treino
-- [ ] Excluir treino
-- [ ] Adicionar exercícios
-- [ ] Reordenar exercícios
-- [ ] Séries
-- [ ] Repetições
-- [ ] Descanso
-- [ ] Registro de cargas
+- [ ] Reordenação dedicada de exercícios
+- [ ] `WorkoutSession`
 - [ ] Execução do treino
-- [ ] Histórico
+- [ ] `SetLog`
+- [ ] Registro real de cargas e repetições
+- [ ] Histórico de execução
 
 ---
 
@@ -1006,9 +1231,9 @@ Cada etapa deve:
 
 # 📌 Estado atual
 
-**Versão:** `Parte 3`
+**Versão:** `Parte 4`
 
-**Status:** 🟢 Backend core funcional + módulos de usuário, perfil e exercícios concluídos
+**Status:** 🟢 Backend core funcional + módulos de usuário, perfil, exercícios e treinos concluídos
 
 O sistema atualmente consegue:
 
@@ -1031,6 +1256,10 @@ Criar e gerenciar exercícios
      ↓
 Filtrar exercícios
      ↓
+Criar e gerenciar treinos
+     ↓
+Adicionar e configurar exercícios nos treinos
+     ↓
 Validar entradas
      ↓
 Padronizar categorias
@@ -1040,25 +1269,29 @@ Retornar erros estruturados
 
 ### Próximo módulo
 
-A próxima etapa será a **Parte 4 — Treinos (`Workout`)**.
+A próxima etapa será a evolução da execução de treinos, começando por **`WorkoutSession`** e **`SetLog`**.
 
-A arquitetura será separada entre:
+A arquitetura planejada é:
 
 ```text
 Workout
    ↓
 Treino planejado
+   ↓
+WorkoutExercise
+   ↓
+Exercícios + configuração
 
 WorkoutSession
    ↓
 Execução de um treino
-
+   ↓
 SetLog
    ↓
 Registro de cada série executada
 ```
 
-Essa separação permitirá futuramente trabalhar com histórico, evolução, cargas, repetições, volume, PRs e IA sem misturar planejamento com execução.
+Essa separação permitirá trabalhar com histórico, evolução, cargas, repetições, volume, PRs e IA sem misturar planejamento com execução.
 
 ---
 
