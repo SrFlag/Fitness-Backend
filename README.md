@@ -376,9 +376,9 @@ Os textos descritivos, como nome, descrição e instruções, continuam preserva
 
 # 🏋️ Treinos
 
-O módulo de treinos foi implementado na **Parte 4**.
+O módulo de treinos foi implementado na **Parte 4** e a execução real dos treinos foi adicionada na **Parte 5**.
 
-A modelagem separa o **treino planejado** dos exercícios que pertencem a ele. A execução do treino e o registro individual de séries serão implementados em etapas posteriores.
+A modelagem separa o **treino planejado** da sua execução. `Workout` e `WorkoutExercise` representam o planejamento, enquanto `WorkoutSession` e `SetLog` registram o que realmente aconteceu durante o treino.
 
 ## `Workout`
 
@@ -436,9 +436,9 @@ O vínculo utiliza os IDs das entidades existentes. O backend valida que:
 - Proteção por JWT
 - Validação de pertencimento entre usuário, treino e exercício
 
-### Arquitetura planejada
+### Arquitetura de planejamento e execução
 
-A execução será separada posteriormente do planejamento:
+A execução é separada do planejamento:
 
 ```text
 Workout
@@ -460,6 +460,62 @@ Registro de cada série executada
 
 Essa separação permite construir histórico, evolução, volume, PRs e recursos de IA sem misturar o planejamento com os dados reais de execução.
 
+## `WorkoutSession`
+
+Representa uma execução específica de um treino planejado:
+
+```text
+id
+userId
+workoutId
+startedAt
+finishedAt
+durationSeconds
+status
+createdAt
+updatedAt
+```
+
+Status utilizados atualmente:
+
+```text
+IN_PROGRESS
+COMPLETED
+CANCELLED
+```
+
+## `SetLog`
+
+Registra cada série realmente executada durante uma sessão:
+
+```text
+id
+workoutSessionId
+workoutExerciseId
+setNumber
+weight
+repetitions
+restSeconds
+completed
+notes
+createdAt
+updatedAt
+```
+
+### Funcionalidades implementadas na Parte 5
+
+- Iniciar uma sessão de treino
+- Finalizar uma sessão
+- Listar histórico de sessões do usuário
+- Buscar uma sessão específica
+- Registrar séries executadas
+- Consultar séries de uma sessão
+- Validar que a sessão pertence ao usuário autenticado
+- Validar que o exercício pertence ao treino da sessão
+- Impedir registro de séries após a sessão ser finalizada
+- Registrar carga, repetições, descanso, conclusão e observações
+- Proteção por JWT
+
 ---
 
 # 🗄️ Banco de dados
@@ -480,6 +536,8 @@ user_profiles
 exercises
 workouts
 workout_exercises
+workout_sessions
+set_logs
 ```
 
 ### `User`
@@ -558,6 +616,36 @@ sets
 repetitions
 restSeconds
 targetWeight
+notes
+createdAt
+updatedAt
+```
+
+### `WorkoutSession`
+
+```text
+id
+userId
+workoutId
+startedAt
+finishedAt
+durationSeconds
+status
+createdAt
+updatedAt
+```
+
+### `SetLog`
+
+```text
+id
+workoutSessionId
+workoutExerciseId
+setNumber
+weight
+repetitions
+restSeconds
+completed
 notes
 createdAt
 updatedAt
@@ -856,6 +944,75 @@ Exemplo de body:
 }
 ```
 
+## Sessões de treino
+
+### `POST /api/workout-sessions`
+
+Inicia uma sessão para um treino pertencente ao usuário autenticado.
+
+**Autenticação:** 🔒 Bearer JWT
+
+Body:
+
+```json
+{
+  "workoutId": "SEU_WORKOUT_ID"
+}
+```
+
+### `PUT /api/workout-sessions/{sessionId}/finish`
+
+Finaliza uma sessão em andamento e registra sua duração.
+
+**Autenticação:** 🔒 Bearer JWT
+
+Body:
+
+```json
+{
+  "durationSeconds": 3720
+}
+```
+
+### `GET /api/workout-sessions`
+
+Lista as sessões do usuário autenticado, ordenadas da mais recente para a mais antiga.
+
+**Autenticação:** 🔒 Bearer JWT
+
+### `GET /api/workout-sessions/{sessionId}`
+
+Busca uma sessão específica pertencente ao usuário autenticado.
+
+**Autenticação:** 🔒 Bearer JWT
+
+## Séries executadas
+
+### `POST /api/workout-sessions/{sessionId}/sets/{workoutExerciseId}`
+
+Registra uma série executada dentro de uma sessão em andamento.
+
+**Autenticação:** 🔒 Bearer JWT
+
+Body:
+
+```json
+{
+  "setNumber": 1,
+  "weight": 25.0,
+  "repetitions": 12,
+  "restSeconds": 90,
+  "completed": true,
+  "notes": "Boa execução"
+}
+```
+
+### `GET /api/workout-sessions/{sessionId}/sets`
+
+Lista todas as séries registradas na sessão.
+
+**Autenticação:** 🔒 Bearer JWT
+
 ---
 
 # ⚠️ Tratamento de erros
@@ -887,6 +1044,10 @@ Para erros de validação, as mensagens dos campos inválidos são agrupadas em 
 - [x] Persistência de usuários
 - [x] Persistência de perfis
 - [x] Persistência de exercícios
+- [x] Persistência de treinos
+- [x] Persistência de exercícios dos treinos
+- [x] Persistência de sessões de treino
+- [x] Persistência de séries executadas
 
 ## Cadastro e autenticação
 
@@ -943,6 +1104,20 @@ Para erros de validação, as mensagens dos campos inválidos são agrupadas em 
 - [x] Validação de existência do exercício
 - [x] Validação de vínculo entre `Workout` e `WorkoutExercise`
 - [x] Configuração de séries, repetições, descanso e carga-alvo
+
+## Execução de treinos
+
+- [x] Início de `WorkoutSession`
+- [x] Registro de `startedAt`
+- [x] Registro de séries com `SetLog`
+- [x] Listagem das séries de uma sessão
+- [x] Finalização de sessão
+- [x] Registro de duração
+- [x] Histórico de sessões
+- [x] Busca de sessão por ID
+- [x] Bloqueio de registro após finalização
+- [x] Validação de pertencimento da sessão ao usuário
+- [x] Validação de pertencimento do exercício ao treino da sessão
 
 ## Segurança
 
@@ -1055,18 +1230,35 @@ Para erros de validação, as mensagens dos campos inválidos são agrupadas em 
 - [x] Validação de pertencimento ao usuário
 - [x] Validação do vínculo entre treino e exercício
 
-### Próxima evolução do módulo
+### Evoluções futuras do módulo
 
 - [ ] Reordenação dedicada de exercícios
-- [ ] `WorkoutSession`
-- [ ] Execução do treino
-- [ ] `SetLog`
-- [ ] Registro real de cargas e repetições
-- [ ] Histórico de execução
+- [ ] Edição/exclusão de séries registradas
+- [ ] Status `CANCELLED` com endpoint dedicado
+- [ ] Regras específicas para impedir sessões duplicadas em andamento
 
 ---
 
-## Parte 5 — Evolução
+## Parte 5 — Execução de treinos
+
+**Status: ✅ Concluída**
+
+- [x] `WorkoutSession`
+- [x] Início da sessão
+- [x] Finalização da sessão
+- [x] Duração da sessão
+- [x] Histórico de sessões
+- [x] `SetLog`
+- [x] Registro de carga
+- [x] Registro de repetições
+- [x] Registro de descanso
+- [x] Registro de conclusão da série
+- [x] Observações da série
+- [x] Validações de segurança e pertencimento
+
+---
+
+## Parte 6 — Evolução
 
 - [ ] Volume de treino
 - [ ] Cargas
@@ -1078,7 +1270,7 @@ Para erros de validação, as mensagens dos campos inválidos são agrupadas em 
 
 ---
 
-## Parte 6 — Inteligência Artificial
+## Parte 7 — Inteligência Artificial
 
 - [ ] Integração com Gemini
 - [ ] Contexto baseado no perfil
@@ -1115,7 +1307,7 @@ Aplicativo
 
 ---
 
-## Parte 7 — Nutrição
+## Parte 8 — Nutrição
 
 - [ ] Perfil nutricional
 - [ ] Metas calóricas
@@ -1128,7 +1320,7 @@ Aplicativo
 
 ---
 
-## Parte 8 — IA nutricional
+## Parte 9 — IA nutricional
 
 - [ ] Análise de foto do prato
 - [ ] Identificação de alimentos
@@ -1231,9 +1423,9 @@ Cada etapa deve:
 
 # 📌 Estado atual
 
-**Versão:** `Parte 4`
+**Versão:** `Parte 5`
 
-**Status:** 🟢 Backend core funcional + módulos de usuário, perfil, exercícios e treinos concluídos
+**Status:** 🟢 Backend core funcional + módulos de usuário, perfil, exercícios, treinos e execução de treinos concluídos
 
 O sistema atualmente consegue:
 
@@ -1260,6 +1452,12 @@ Criar e gerenciar treinos
      ↓
 Adicionar e configurar exercícios nos treinos
      ↓
+Iniciar sessões de treino
+     ↓
+Registrar séries executadas
+     ↓
+Finalizar sessões e consultar histórico
+     ↓
 Validar entradas
      ↓
 Padronizar categorias
@@ -1269,9 +1467,18 @@ Retornar erros estruturados
 
 ### Próximo módulo
 
-A próxima etapa será a evolução da execução de treinos, começando por **`WorkoutSession`** e **`SetLog`**.
+A próxima etapa será **Parte 6 — Evolução**, focada em transformar os registros de execução em métricas de desempenho.
 
-A arquitetura planejada é:
+Principais objetivos:
+
+- volume de treino;
+- evolução de cargas e repetições;
+- frequência;
+- PRs;
+- gráficos;
+- comparação de desempenho.
+
+A arquitetura atual é:
 
 ```text
 Workout
@@ -1291,7 +1498,7 @@ SetLog
 Registro de cada série executada
 ```
 
-Essa separação permitirá trabalhar com histórico, evolução, cargas, repetições, volume, PRs e IA sem misturar planejamento com execução.
+Essa separação permite construir histórico e métricas sem misturar planejamento com execução.
 
 ---
 
